@@ -53,25 +53,30 @@ class GuruController extends Controller
         }
     }
 
-    public function store(Request $request) {
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'nip' => 'nullable|string|unique:users,nip',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-            'no_hp' => 'nullable|string',
+        public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama'  => 'required|string|max:255',
+            'peran' => 'required|in:guru,wali_kelas',
+            'nip'   => 'nullable|string|max:50',
+            'no_hp' => 'nullable|string|max:20',
+            // ✨ email & password TIDAK lagi divalidasi dari form
         ]);
+
+        // ✨ Email otomatis sesuai peran: guru/wali_kelas -> @guru.id
+        $email = User::generateEmail($validated['nama'], $validated['peran']);
 
         User::create([
-            'nama' => $request->nama,
-            'nip' => $request->nip,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'peran' => 'guru',
-            'no_hp' => $request->no_hp,
+            'nama'     => $validated['nama'],
+            'email'    => $email,
+            'password' => Hash::make(User::defaultPassword()), // default: "password"
+            'peran'    => $validated['peran'],
+            'nip'      => $validated['nip'] ?? null,
+            'no_hp'    => $validated['no_hp'] ?? null,
         ]);
 
-        return redirect()->route('guru.index')->with('success', 'Data Guru berhasil ditambahkan!');
+        return redirect()->route('guru.index')
+            ->with('success', "Guru berhasil ditambahkan! Email: {$email} | Password: " . User::defaultPassword());
     }
 
      public function edit(User $guru) 
