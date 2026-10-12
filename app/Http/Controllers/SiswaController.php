@@ -35,33 +35,35 @@ class SiswaController extends Controller
         return view('siswa.create', compact('kelas'));
     }
 
-    public function store(Request $request)
+       public function store(Request $request)
     {
         $user = auth()->user();
         $allowedKelasIds = $user->isAdmin() ? Kelas::pluck('id') : $user->kelasWali()->pluck('id');
 
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
             'kelas_id' => ['required', Rule::in($allowedKelasIds)],
             'nama_ortu' => 'nullable|string|max:255',
             'no_wa_ortu' => 'nullable|string|max:20|regex:/^[0-9+\-\s]+$/',
         ]);
 
+        // ✨ Email & password otomatis
+        $email = User::generateEmail($validated['nama'], 'siswa');
+
         User::create([
             'nama' => $validated['nama'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'email' => $email,
+            'password' => Hash::make(User::defaultPassword()),
             'peran' => 'siswa',
             'kelas_id' => $validated['kelas_id'],
             'nama_ortu' => $validated['nama_ortu'] ?? null,
             'no_wa_ortu' => $validated['no_wa_ortu'] ?? null,
         ]);
 
-        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil ditambahkan!');
+        return redirect()->route('siswa.index')
+            ->with('success', "Siswa berhasil ditambahkan! Email: {$email} | Password: " . User::defaultPassword());
     }
-
+    
     public function show(User $siswa)
     {
         if ($siswa->peran !== 'siswa') abort(404);

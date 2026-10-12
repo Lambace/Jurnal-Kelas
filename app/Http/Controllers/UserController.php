@@ -68,24 +68,33 @@ class UserController extends Controller
         return view('users.create', compact('kelas', 'daftarRole'));
     }
 
-    public function store(Request $request)
+        public function store(Request $request)
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
             'peran' => 'required|in:admin,guru,wali_kelas,siswa,tamu',
             'kelas_id' => 'nullable|exists:kelas,id',
             'nip' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:20',
+            'no_wa_ortu' => 'nullable|string|max:20',
         ]);
 
-        // Hash password sebelum disimpan
-        $validated['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        // ✨ Email & password otomatis sesuai peran
+        $email = User::generateEmail($validated['nama'], $validated['peran']);
 
-        \App\Models\User::create($validated);
+        User::create([
+            'nama' => $validated['nama'],
+            'email' => $email,
+            'password' => Hash::make(User::defaultPassword()),
+            'peran' => $validated['peran'],
+            'kelas_id' => $validated['kelas_id'] ?? null,
+            'nip' => $validated['nip'] ?? null,
+            'no_hp' => $validated['no_hp'] ?? null,
+            'no_wa_ortu' => $validated['no_wa_ortu'] ?? null,
+        ]);
 
-        return redirect()->route('users.index')->with('success', 'User baru berhasil ditambahkan!');
+        return redirect()->route('users.index')
+            ->with('success', "User berhasil dibuat! Email: {$email} | Password: " . User::defaultPassword());
     }
 
     public function edit(User $user)

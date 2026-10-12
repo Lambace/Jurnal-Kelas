@@ -1,0 +1,26 @@
+# Perintah Backup
+
+1. php artisan tinker --execute="echo json_encode(\App\Models\Kelas::all()->toArray());" (→ simpan sebagai  database/seeders/backup/kelas.json)
+
+2. php artisan tinker --execute="echo json_encode(\App\Models\User::all()->toArray());" (→ simpan sebagai database/seeders/backup/users.json)
+
+3. php artisan tinker --execute="echo json_encode(\App\Models\JurnalHarian::all()->toArray());" (php artisan tinker --execute="echo json_encode(\App\Models\JurnalHarian::all()->toArray());")
+
+4. php artisan tinker --execute="echo json_encode(\App\Models\AbsensiHarian::all()->toArray());" (php artisan tinker --execute="echo json_encode(\App\Models\AbsensiHarian::all()->toArray());")
+
+# Restore DB SQLite
+
+1.   touch database/database.sqlite
+2.   php artisan migrate --force
+3.   php artisan db:seed --class=RestoreDataSeeder --force
+
+
+
+#  Verifikasi Aplikasi
+
+Buka aplikasi di mode Incognito: https://jurnal-kelas-production-3esuvy.laravel.cloud/
+Login: admin@sekolah.sch.id / password
+Logout → harus lancar ✅
+Login sebagai guru (atau buat akun guru dulu) → isi jurnal → status Alpha → simpan → WA masuk dengan format "Senin, 12 Oktober 2026" ✅
+
+

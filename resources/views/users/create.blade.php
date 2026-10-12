@@ -32,17 +32,11 @@
                         class="w-full px-3 md:px-4 py-2.5 rounded-lg border border-gray-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition outline-none text-sm md:text-base">
                 </div>
                 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" value="{{ old('email') }}" required 
-                        class="w-full px-3 md:px-4 py-2.5 rounded-lg border border-gray-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition outline-none text-sm md:text-base">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
-                    <input type="password" name="password" required placeholder="Minimal 6 karakter"
-                        class="w-full px-3 md:px-4 py-2.5 rounded-lg border border-gray-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition outline-none text-sm md:text-base">
-                </div>
+                <div class="md:col-span-2 p-3 bg-cyan-50 border border-cyan-200 rounded-lg text-sm text-cyan-800">
+                        ℹ️ <b>Email & password dibuat otomatis.</b><br>
+                        Contoh: nama <b>Aura Kasih</b> → email <b>aurakasih@siswa.id</b> · password <b>password</b><br>
+                        Jika email sudah dipakai, sistem otomatis menambah angka (aurakasih2@siswa.id).
+                    </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Peran / Role <span class="text-red-500">*</span></label>
