@@ -22,8 +22,7 @@ class WhatsAppService
             default => strtoupper($status)
         };
 
-        $tanggalFormat = \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
-        $ketText = $keterangan ? "\nKeterangan: {$keterangan}" : "";
+$tanggalFormat = \Carbon\Carbon::parse($tanggal)->locale('id')->translatedFormat('l, d F Y');        $ketText = $keterangan ? "\nKeterangan: {$keterangan}" : "";
 
         $pesan = "Yth. Wali Murid dari *{$namaSiswa}*,\n\n" .
                  "Kami informasikan bahwa pada hari *{$tanggalFormat}*, anak Anda tercatat:\n" .
