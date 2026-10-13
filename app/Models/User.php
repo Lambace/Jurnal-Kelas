@@ -40,45 +40,6 @@ class User extends Authenticatable
     }
 
     // ==========================================
-    // AUTO-GENERATE EMAIL & PASSWORD DEFAULT
-    // ==========================================
-
-    /**
-     * Buat email otomatis dari nama.
-     * Contoh: "Aura Kasih" (siswa) -> aurakasih@siswa.id
-     * Jika sudah dipakai, otomatis tambah angka: aurakasih2@siswa.id
-     */
-    public static function generateEmail(string $nama, string $peran = 'siswa', ?int $exceptId = null): string
-    {
-        $domain = match ($peran) {
-            'siswa'              => 'siswa.id',
-            'guru', 'wali_kelas' => 'guru.id',
-            default              => 'sekolah.id',
-        };
-
-        // ambil huruf saja, lowercase, tanpa spasi & simbol
-        $base = preg_replace('/[^a-z]/', '', strtolower($nama)) ?: 'user';
-
-        $email = $base . '@' . $domain;
-        $i = 2;
-
-        while (static::where('email', $email)
-                    ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
-                    ->exists()) {
-            $email = $base . $i . '@' . $domain;
-            $i++;
-        }
-
-        return $email;
-    }
-
-    /** Password default untuk semua user baru */
-    public static function defaultPassword(): string
-    {
-        return 'password';
-    }
-
-    // ==========================================
     // RELASI (RELATIONSHIPS)
     // ==========================================
 
@@ -123,7 +84,7 @@ class User extends Authenticatable
     }
 
     // ==========================================
-    // HELPER METHODS
+    // HELPER METHODS (ROLE CHECKERS)
     // ==========================================
 
     public function isAdmin(): bool 
@@ -146,7 +107,16 @@ class User extends Authenticatable
         return $this->peran === 'guru'; 
     }
 
+    // ==========================================
+    // HELPER METHODS (FILTER KELAS)
+    // ==========================================
 
+    /**
+     * Daftar ID kelas yang diampu user ini.
+     * Admin     => semua kelas
+     * Wali kelas => hanya kelas yang ditugaskan
+     * Lainnya   => kosong
+     */
     public function kelasIdsDiampu()
     {
         if ($this->isAdmin()) {
@@ -158,5 +128,43 @@ class User extends Authenticatable
         }
 
         return collect();
+    }
+
+    // ==========================================
+    // HELPER METHODS (AUTO GENERATE)
+    // ==========================================
+
+    /**
+     * Buat email otomatis dari nama.
+     * Contoh: "Aura Kasih" (siswa) -> aurakasih@siswa.id
+     * Jika sudah dipakai, otomatis tambah angka: aurakasih2@siswa.id
+     */
+    public static function generateEmail(string $nama, string $peran = 'siswa', ?int $exceptId = null): string
+    {
+        $domain = match ($peran) {
+            'siswa'              => 'siswa.id',
+            'guru', 'wali_kelas' => 'guru.id',
+            default              => 'sekolah.id',
+        };
+
+        $base = preg_replace('/[^a-z]/', '', strtolower($nama)) ?: 'user';
+
+        $email = $base . '@' . $domain;
+        $i = 2;
+
+        while (static::where('email', $email)
+                    ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
+                    ->exists()) {
+            $email = $base . $i . '@' . $domain;
+            $i++;
+        }
+
+        return $email;
+    }
+
+    /** Password default untuk semua user baru */
+    public static function defaultPassword(): string
+    {
+        return 'password';
     }
 }
