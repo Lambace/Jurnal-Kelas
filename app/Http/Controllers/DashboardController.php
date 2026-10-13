@@ -11,94 +11,33 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::user();
+        public function index()
+            {
+                $user = auth()->user();
+                $kelasIds = $user->kelasIdsDiampu();
 
-        // ⚠️ INISIALISASI DEFAULT (Mencegah error undefined variable)
-        $totalJurnal = 0;
-        $menunggu = 0;
-        $disetujui = 0;
-        $ditolak = 0;
-        $jurnalTerbaru = collect([]);
-        $jumlahTamu = 0; // ⚠️ Default 0, akan diubah jika Admin
+                // ⚠️ Sesuaikan nama kolom status persetujuan dengan migration Anda
+                //    (mis. 'status_persetujuan' atau 'status')
+                $totalJurnalMenunggu  = JurnalHarian::whereIn('id_kelas', $kelasIds)->where('status_persetujuan', 'menunggu')->count();
+                $totalJurnalDisetujui = JurnalHarian::whereIn('id_kelas', $kelasIds)->where('status_persetujuan', 'disetujui')->count();
+                $totalJurnalDitolak   = JurnalHarian::whereIn('id_kelas', $kelasIds)->where('status_persetujuan', 'ditolak')->count();
 
-        // Default chart data (7 hari terakhir)
-        $defaultStart = now()->subDays(6)->format('Y-m-d');
-        $defaultEnd = now()->format('Y-m-d');
-        
-        $chartData = [
-            'labels' => [],
-            'hadir' => [],
-            'tidak_hadir' => [],
-            'total_hadir' => 0,
-            'total_tidak_hadir' => 0,
-            'start_date' => $defaultStart,
-            'end_date' => $defaultEnd
-        ];
+                $totalSiswa = User::where('peran', 'siswa')->whereIn('kelas_id', $kelasIds)->count();
 
-        if ($user->isAdmin()) {
-            $totalJurnal = JurnalHarian::count();
-            $menunggu = JurnalHarian::where('status', 'menunggu_verifikasi')->count();
-            $disetujui = JurnalHarian::where('status', 'disetujui')->count();
-            $ditolak = JurnalHarian::where('status', 'ditolak')->count();
-            
-            $jurnalTerbaru = JurnalHarian::with(['kelas', 'pengisi', 'penyetuju'])
-                ->latest('tanggal')
-                ->take(5)
-                ->get();
-            
-            // ⚠️ HITUNG JUMLAH USER BARU (TAMU) YANG MENUNGGU AKTIVASI
-            $jumlahTamu = User::where('peran', 'tamu')->count();
+                // Grafik kehadiran: hanya dari absensi kelas yang diampu
+                $grafikKehadiran = AbsensiHarian::whereIn('kelas_id', $kelasIds)
+                    ->selectRaw('status, count(*) as total')
+                    ->groupBy('status')
+                    ->pluck('total', 'status');
 
-            $chartData = $this->getDailyAttendanceData(null, $defaultStart, $defaultEnd);
-
-        } elseif ($user->isWaliKelas()) {
-            $kelasIds = $user->kelasWali()->pluck('id');
-
-            if ($kelasIds->isEmpty()) {
-                // Data tetap menggunakan nilai default 0 di atas
-            } else {
-                $totalJurnal = JurnalHarian::whereIn('id_kelas', $kelasIds)->count();
-                $menunggu = JurnalHarian::whereIn('id_kelas', $kelasIds)->where('status', 'menunggu_verifikasi')->count();
-                $disetujui = JurnalHarian::whereIn('id_kelas', $kelasIds)->where('status', 'disetujui')->count();
-                $ditolak = JurnalHarian::whereIn('id_kelas', $kelasIds)->where('status', 'ditolak')->count();
-                
-                $jurnalTerbaru = JurnalHarian::with(['kelas', 'pengisi', 'penyetuju'])
-                    ->whereIn('id_kelas', $kelasIds)
-                    ->latest('tanggal')
-                    ->take(5)
-                    ->get();
-
-                $chartData = $this->getDailyAttendanceData($kelasIds, $defaultStart, $defaultEnd);
+                return view('dashboard', compact(
+                    'totalJurnalMenunggu',
+                    'totalJurnalDisetujui',
+                    'totalJurnalDitolak',
+                    'totalSiswa',
+                    'grafikKehadiran'
+                ));
             }
-            
-        } else {
-            // Guru / Siswa
-            $totalJurnal = JurnalHarian::where('id_pengisi', $user->id)->count();
-            $menunggu = JurnalHarian::where('id_pengisi', $user->id)->where('status', 'menunggu_verifikasi')->count();
-            $disetujui = JurnalHarian::where('id_pengisi', $user->id)->where('status', 'disetujui')->count();
-            $ditolak = JurnalHarian::where('id_pengisi', $user->id)->where('status', 'ditolak')->count();
-            
-            $jurnalTerbaru = JurnalHarian::with(['kelas', 'pengisi', 'penyetuju'])
-                ->where('id_pengisi', $user->id)
-                ->latest('tanggal')
-                ->take(5)
-                ->get();
-        }
-
-        // ⚠️ PASTIKAN 'jumlahTamu' DIMASUKKAN KE DALAM COMPACT
-        return view('dashboard', compact(
-            'totalJurnal', 
-            'menunggu', 
-            'disetujui', 
-            'ditolak', 
-            'jurnalTerbaru', 
-            'chartData', 
-            'jumlahTamu'
-        ));
-    }
-
     /**
      * ⚠️ METHOD BARU: API untuk mengambil data absensi berdasarkan rentang tanggal
      * Dipanggil via AJAX dari frontend

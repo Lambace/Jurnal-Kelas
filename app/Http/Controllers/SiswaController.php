@@ -14,20 +14,22 @@ use App\Imports\SiswaImport;
 
 class SiswaController extends Controller
 {
-    public function index()
+        public function index()
     {
         $user = auth()->user();
-        
-        if ($user->isAdmin()) {
-            $siswa = User::where('peran', 'siswa')->with('kelas')->orderBy('kelas_id')->orderBy('nama')->paginate(15);
-        } else {
-            $kelasIds = $user->kelasWali()->pluck('id');
-            $siswa = User::where('peran', 'siswa')->whereIn('kelas_id', $kelasIds)->with('kelas')->orderBy('nama')->paginate(15);
-        }
+        $kelasIds = $user->kelasIdsDiampu();
 
-        return view('siswa.index', compact('siswa'));
+        // Admin: semua siswa. Wali kelas: hanya siswa kelasnya.
+        $siswa = User::where('peran', 'siswa')
+            ->with('kelas')
+            ->when(!$user->isAdmin(), fn ($q) => $q->whereIn('kelas_id', $kelasIds))
+            ->orderBy('nama')
+            ->get();
+
+        $kelasList = $user->isAdmin() ? Kelas::all() : $user->kelasWali()->get();
+
+        return view('siswa.index', compact('siswa', 'kelasList'));
     }
-
     public function create()
     {
         $user = auth()->user();

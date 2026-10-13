@@ -47,25 +47,25 @@ class JurnalController extends Controller
         return view('jurnal.index', compact('jurnals'));
     }
 
-    public function create()
+       public function create()
     {
         $user = auth()->user();
-        
-        if ($user->isWaliKelas()) {
-            $kelas = $user->kelasWali()->get();
-        } elseif ($user->isSiswa()) {
-            $kelas = $user->kelas_id 
-                ? Kelas::where('id', $user->kelas_id)->get() 
-                : collect([]);
-        } else {
-            $kelas = Kelas::all();
+        $kelasIds = $user->kelasIdsDiampu();
+
+        if ($kelasIds->isEmpty()) {
+            return redirect()->route('jurnal.index')
+                ->with('error', 'Anda belum ditugaskan sebagai wali kelas. Hubungi administrator.');
         }
 
-        $siswaPerKelas = Kelas::with(['users' => function($q) {
-            $q->where('peran', 'siswa')->orderBy('nama');
-        }])->get();
-        
-        return view('jurnal.create', compact('kelas', 'siswaPerKelas'));
+        $kelasList = Kelas::whereIn('id', $kelasIds)->get();
+        $kelasId = request()->query('kelas_id', $kelasList->first()->id);
+
+        $siswa = User::where('peran', 'siswa')
+            ->where('kelas_id', $kelasId)
+            ->orderBy('nama')
+            ->get();
+
+        return view('jurnal.create', compact('kelasList', 'siswa', 'kelasId'));
     }
 
     public function store(Request $request)

@@ -145,4 +145,18 @@ class User extends Authenticatable
     { 
         return $this->peran === 'guru'; 
     }
+
+
+    public function kelasIdsDiampu()
+    {
+        if ($this->isAdmin()) {
+            return Kelas::pluck('id');
+        }
+
+        if ($this->isWaliKelas()) {
+            return $this->kelasWali()->pluck('id');
+        }
+
+        return collect();
+    }
 }
