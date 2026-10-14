@@ -123,7 +123,7 @@ class User extends Authenticatable
     }
 
     // ==========================================
-    // HELPER METHODS
+    // HELPER METHODS (ROLE CHECKERS)
     // ==========================================
 
     public function isAdmin(): bool 
@@ -144,5 +144,28 @@ class User extends Authenticatable
     public function isGuru(): bool 
     { 
         return $this->peran === 'guru'; 
+    }
+
+    // ==========================================
+    // ️ METHOD BARU: FILTER KELAS (DITAMBAHKAN!)
+    // ==========================================
+
+    /**
+     * Daftar ID kelas yang diampu user ini.
+     * Admin      => semua kelas
+     * Wali kelas => hanya kelas yang ditugaskan
+     * Lainnya    => kosong
+     */
+    public function kelasIdsDiampu()
+    {
+        if ($this->isAdmin()) {
+            return Kelas::pluck('id');
+        }
+
+        if ($this->isWaliKelas()) {
+            return $this->kelasWali()->pluck('id');
+        }
+
+        return collect();
     }
 }
