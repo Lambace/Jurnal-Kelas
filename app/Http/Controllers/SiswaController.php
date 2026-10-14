@@ -14,18 +14,48 @@ use App\Imports\SiswaImport;
 
 class SiswaController extends Controller
 {
-    public function index()
+       public function index(Request $request)
     {
         $user = auth()->user();
+        $kelasIds = $user->kelasIdsDiampu();
+
+        // ⚠️ WHITELIST kolom yang boleh di-sort (mencegah SQL injection)
+        $allowedSorts = ['nama', 'nama_kelas', 'nama_ortu', 'no_wa_ortu', 'created_at'];
         
-        if ($user->isAdmin()) {
-            $siswa = User::where('peran', 'siswa')->with('kelas')->orderBy('kelas_id')->orderBy('nama')->paginate(15);
-        } else {
-            $kelasIds = $user->kelasWali()->pluck('id');
-            $siswa = User::where('peran', 'siswa')->whereIn('kelas_id', $kelasIds)->with('kelas')->orderBy('nama')->paginate(15);
+        // Ambil parameter sort dari URL (?sort=nama&direction=asc)
+        $sort = in_array($request->get('sort'), $allowedSorts) 
+            ? $request->get('sort') 
+            : 'nama'; // default: urutkan berdasarkan nama
+        
+        $direction = in_array($request->get('direction'), ['asc', 'desc']) 
+            ? $request->get('direction') 
+            : 'asc';
+
+        // Query data siswa
+        $query = User::where('peran', 'siswa')
+            ->with('kelas');
+
+        // Filter berdasarkan kelas (admin = semua, wali kelas = kelasnya saja)
+        if (!$user->isAdmin()) {
+            $query->whereIn('kelas_id', $kelasIds);
         }
 
-        return view('siswa.index', compact('siswa'));
+        // Terapkan sorting
+        if ($sort === 'nama_kelas') {
+            // Sort berdasarkan nama kelas butuh join
+            $query->join('kelas', 'users.kelas_id', '=', 'kelas.id')
+                  ->orderBy('kelas.nama', $direction)
+                  ->select('users.*');
+        } else {
+            $query->orderBy($sort, $direction);
+        }
+
+        // Gunakan paginate (sesuai view yang ada $siswa->hasPages())
+        $siswa = $query->paginate(10)->appends($request->query());
+        
+        $kelasList = $user->isAdmin() ? Kelas::all() : $user->kelasWali()->get();
+
+        return view('siswa.index', compact('siswa', 'kelasList', 'sort', 'direction'));
     }
 
     public function create()

@@ -6,12 +6,43 @@
 @section('content')
 <div class="space-y-4 md:space-y-6">
     
+    {{-- Helper untuk Generate Sort Link --}}
+    @php
+        function sortLink($column, $label, $currentSort, $currentDirection)
+        {
+            // Tentukan arah sort berikutnya
+            $nextDirection = ($currentSort === $column && $currentDirection === 'asc') ? 'desc' : 'asc';
+            
+            // Gabungkan query params yang ada (pagination, filter, dll)
+            $params = array_merge(request()->query(), [
+                'sort' => $column,
+                'direction' => $nextDirection,
+                'page' => null, // reset ke halaman 1 saat ganti sort
+            ]);
+            
+            $url = request()->url() . '?' . http_build_query(array_filter($params));
+            
+            // Tentukan ikon panah dengan styling yang sesuai tema
+            if ($currentSort === $column) {
+                $icon = $currentDirection === 'asc' 
+                    ? '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/></svg>'
+                    : '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/></svg>';
+            } else {
+                $icon = '<svg class="w-3 h-3 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/></svg>';
+            }
+            
+            $textColor = $currentSort === $column ? 'text-cyan-700' : 'text-gray-500 hover:text-cyan-600';
+            
+            return '<a href="' . $url . '" class="inline-flex items-center ' . $textColor . ' transition font-medium uppercase">' 
+                   . $label . $icon . '</a>';
+        }
+    @endphp
+
     {{-- Header & Tombol Aksi --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <p class="text-gray-500 text-sm">Kelola data siswa dan kontak orang tua</p>
+        <p class="text-gray-500 text-sm">Kelola data siswa dan kontak orang tua. Klik header tabel untuk mengurutkan.</p>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
             
-            {{-- BARU: Tombol Hapus Semua (HANYA UNTUK ADMIN) --}}
             @if(auth()->user()->peran === 'admin')
             <form action="{{ route('siswa.deleteAll') }}" method="POST" class="flex-1 sm:flex-none" 
                   onsubmit="return confirm('⚠️ PERINGATAN KERAS:\n\nAnda akan menghapus SEMUA data siswa secara PERMANEN!\nTindakan ini TIDAK DAPAT dibatalkan.\n\nLanjutkan?')">
@@ -26,7 +57,6 @@
             </form>
             @endif
 
-            <!-- Tombol Export Excel -->
             <a href="{{ route('siswa.export') }}" 
                class="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl font-medium shadow-lg shadow-green-200 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,7 +65,6 @@
                 Export Excel
             </a>
             
-            <!-- Tombol Import Excel (Buka Modal) -->
             <button type="button" onclick="document.getElementById('importModal').classList.remove('hidden')" 
                     class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-200 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +73,6 @@
                 Import Excel
             </button>
 
-            <!-- Tombol Tambah Siswa -->
             <a href="{{ route('siswa.create') }}" 
                class="flex-1 sm:flex-none bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-4 py-2.5 rounded-xl font-medium shadow-lg shadow-cyan-200 transition-all duration-300 flex items-center justify-center gap-2 text-sm transform hover:-translate-y-0.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,11 +98,8 @@
     {{-- MODAL IMPORT --}}
     <div id="importModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
             <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="document.getElementById('importModal').classList.add('hidden')"></div>
-
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
             <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -111,16 +136,33 @@
         </div>
     </div>
 
-    {{-- Tabel Data Siswa --}}
+    {{-- Tabel Data Siswa dengan Sort --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Nama Siswa</th>
-                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Kelas</th>
-                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap hidden lg:table-cell">Nama Orang Tua</th>
-                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap hidden lg:table-cell">No. WhatsApp</th>
+                        {{-- Kolom Nama Siswa (bisa di-sort) --}}
+                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium whitespace-nowrap">
+                            {!! sortLink('nama', 'Nama Siswa', $sort, $direction) !!}
+                        </th>
+                        
+                        {{-- Kolom Kelas (bisa di-sort) --}}
+                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium whitespace-nowrap hidden md:table-cell">
+                            {!! sortLink('nama_kelas', 'Kelas', $sort, $direction) !!}
+                        </th>
+                        
+                        {{-- Kolom Nama Orang Tua (bisa di-sort) --}}
+                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium whitespace-nowrap hidden lg:table-cell">
+                            {!! sortLink('nama_ortu', 'Nama Orang Tua', $sort, $direction) !!}
+                        </th>
+                        
+                        {{-- Kolom No. WhatsApp (bisa di-sort) --}}
+                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium whitespace-nowrap hidden lg:table-cell">
+                            {!! sortLink('no_wa_ortu', 'No. WhatsApp', $sort, $direction) !!}
+                        </th>
+                        
+                        {{-- Kolom Aksi (TIDAK bisa di-sort) --}}
                         <th class="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
