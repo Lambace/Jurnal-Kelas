@@ -10,7 +10,14 @@ class RestoreDataSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys=OFF');
+        $driver = DB::getDriverName();
+
+        // Matikan cek foreign key sesuai jenis database
+        if ($driver === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys=OFF');
+        } elseif ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
 
         $tables = ['kelas', 'users', 'jurnal_harian', 'absensi_harian'];
 
@@ -24,12 +31,7 @@ class RestoreDataSeeder extends Seeder
 
             $rows = json_decode(file_get_contents($file), true);
 
-            if ($rows === null) {
-                echo "[{$table}] JSON RUSAK - dilewati" . PHP_EOL;
-                continue;
-            }
-
-            if (empty($rows)) {
+            if ($rows === null || empty($rows)) {
                 echo "[{$table}] kosong - dilewati" . PHP_EOL;
                 continue;
             }
@@ -38,7 +40,7 @@ class RestoreDataSeeder extends Seeder
                 DB::table($table)->delete();
 
                 foreach ($rows as $row) {
-                    // Tambal password yang hilang dari dump (akibat $hidden di model)
+                    // Tambal password yang hilang dari dump lama
                     if ($table === 'users' && empty($row['password'])) {
                         $row['password'] = Hash::make('password');
                     }
@@ -51,7 +53,13 @@ class RestoreDataSeeder extends Seeder
             }
         }
 
-        DB::statement('PRAGMA foreign_keys=ON');
-        echo "SELESAI." . PHP_EOL;
+        // Nyalakan kembali cek foreign key
+        if ($driver === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys=ON');
+        } elseif ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+
+        echo "RESTORE SELESAI (driver: {$driver})" . PHP_EOL;
     }
 }

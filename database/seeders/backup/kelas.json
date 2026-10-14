@@ -1,1 +1,20 @@
-[{"id":2,"nama":"XI TSM","tingkat":"11","jurusan":"TSM","wali_kelas_id":3,"created_at":"2026-10-12T12:51:32.000000Z","updated_at":"2026-10-12T12:51:32.000000Z"},{"id":3,"nama":"Kelas Test","tingkat":"12","jurusan":null,"wali_kelas_id":null,"created_at":"2026-10-12T13:40:35.000000Z","updated_at":"2026-10-12T13:40:35.000000Z"}]
+[
+    {
+        "id": 2,
+        "nama": "XI TSM",
+        "tingkat": "11",
+        "jurusan": "TSM",
+        "wali_kelas_id": 3,
+        "created_at": "2026-10-12T12:51:32.000000Z",
+        "updated_at": "2026-10-12T12:51:32.000000Z"
+    },
+    {
+        "id": 3,
+        "nama": "Kelas Test",
+        "tingkat": "12",
+        "jurusan": null,
+        "wali_kelas_id": null,
+        "created_at": "2026-10-12T13:40:35.000000Z",
+        "updated_at": "2026-10-12T13:40:35.000000Z"
+    }
+]

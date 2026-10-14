@@ -1,1 +1,31 @@
-[]
+[
+    {
+        "id": 1,
+        "tanggal": "2026-10-13T00:00:00.000000Z",
+        "id_kelas": 2,
+        "id_pengisi": 7,
+        "peran_pengisi": "siswa",
+        "kehadiran": { "hadir": 23, "sakit": 0, "izin": 0, "alpha": 0 },
+        "kebersihan": "bersih",
+        "suasana_kelas": null,
+        "catatan_fasilitas": "aman",
+        "catatan_pribadi_guru": "aman",
+        "pelanggaran": null,
+        "status": "menunggu_verifikasi",
+        "id_penyetuju": null,
+        "disetujui_pada": null,
+        "catatan_penolakan": null,
+        "created_at": "2026-10-13T10:51:54.000000Z",
+        "updated_at": "2026-10-13T10:51:54.000000Z",
+        "cuaca": null,
+        "terlambat": 0,
+        "catatan_ketidakhadiran": null,
+        "mata_pelajaran": null,
+        "topik_materi": null,
+        "metode_pembelajaran": null,
+        "hambatan_belajar": null,
+        "kejadian_positif": null,
+        "siswa_bermasalah": null,
+        "suhu_ruangan": null
+    }
+]
