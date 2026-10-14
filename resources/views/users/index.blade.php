@@ -6,57 +6,69 @@
 @section('content')
 <div class="space-y-4 md:space-y-6">
 
-            {{-- Header dengan Jarak yang Jelas --}}
-        <div class="flex flex-col gap-4 mb-6">
-            {{-- Judul --}}
-            <div>
-                <h2 class="text-lg md:text-xl font-semibold text-gray-800">Daftar Pengguna</h2>
-                <p class="text-gray-500 text-sm mt-1">Kelola semua user dan peran mereka</p>
-            </div>
-            
-            {{-- Tombol Buat User Baru --}}
-            <div class="flex justify-start md:justify-end">
-                <a href="{{ route('users.create') }}" 
-                   class="w-full md:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Buat User Baru
-                </a>
-            </div>
+    {{-- 🌟 INFO BOX: Penjelasan Pemisahan Data --}}
+    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow-sm flex items-start gap-3">
+        <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+            <h4 class="font-semibold text-blue-800 text-sm">Pemisahan Data Agar Tetap Ringan</h4>
+            <p class="text-sm text-blue-700 mt-1">
+                Halaman ini khusus untuk mengelola akun <b>Administrator, Guru, dan Wali Kelas</b>. 
+                Untuk mengelola data <b>Siswa</b> (termasuk import massal), silakan gunakan menu 
+                <a href="{{ route('siswa.index') }}" class="underline font-bold hover:text-blue-900">Data Siswa</a>.
+            </p>
         </div>
-
-        {{-- Filter & Search --}}
-        <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div class="md:col-span-2">
-                <input type="text" name="search" value="{{ request('search') }}" 
-                    placeholder="Cari nama atau email..."
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-200 outline-none text-sm">
-            </div>
-            <div>
-                <select name="role" onchange="this.form.submit()"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-200 outline-none text-sm bg-white">
-                    <option value="">Semua Peran</option>
-                    @foreach($daftarRole as $value => $label)
-                        <option value="{{ $value }}" {{ request('role') == $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <select name="kelas_id" onchange="this.form.submit()"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-200 outline-none text-sm bg-white">
-                    <option value="">Semua Kelas</option>
-                    @foreach($daftarKelas as $k)
-                        <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
-                            {{ $k->nama }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </form>
     </div>
+
+    {{-- Header dengan Jarak yang Jelas --}}
+    <div class="flex flex-col gap-4 mb-2">
+        <div>
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800">Daftar Pengguna Sistem</h2>
+            <p class="text-gray-500 text-sm mt-1">Kelola akses, peran, dan kredensial staff.</p>
+        </div>
+        
+        <div class="flex justify-start md:justify-end">
+            <a href="{{ route('users.create') }}" 
+               class="w-full md:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Buat User Baru
+            </a>
+        </div>
+    </div>
+
+    {{-- Filter & Search --}}
+    <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="md:col-span-2">
+            <input type="text" name="search" value="{{ $search ?? '' }}" 
+                placeholder="Cari nama atau email..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-200 outline-none text-sm">
+        </div>
+        <div>
+            <select name="role" onchange="this.form.submit()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-200 outline-none text-sm bg-white">
+                <option value="">Semua Peran</option>
+                @foreach($daftarRole as $value => $label)
+                    <option value="{{ $value }}" {{ ($role ?? '') == $value ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <select name="kelas_id" onchange="this.form.submit()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-200 outline-none text-sm bg-white">
+                <option value="">Semua Kelas</option>
+                @foreach($daftarKelas as $k)
+                    <option value="{{ $k->id }}" {{ ($kelasId ?? '') == $k->id ? 'selected' : '' }}>
+                        {{ $k->nama }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </form>
 
     {{-- Tabel User --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -88,13 +100,15 @@
                         <td class="px-3 md:px-6 py-3 md:py-4 text-sm text-gray-600 whitespace-nowrap hidden md:table-cell">{{ $user->email }}</td>
                         <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                             @if($user->peran === 'admin')
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-700">️ Admin</span>
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-700">👑 Admin</span>
                             @elseif($user->peran === 'guru')
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">‍ Guru</span>
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">👨‍🏫 Guru</span>
                             @elseif($user->peran === 'wali_kelas')
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">👨💼 Wali Kelas</span>
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">👨‍💼 Wali Kelas</span>
+                            @elseif($user->peran === 'tamu')
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700">👤 Tamu</span>
                             @else
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-700">👨‍ Siswa</span>
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-700">{{ ucfirst($user->peran) }}</span>
                             @endif
                         </td>
                         <td class="px-3 md:px-6 py-3 md:py-4 text-sm text-gray-600 whitespace-nowrap hidden lg:table-cell">
@@ -116,7 +130,7 @@
                             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            Tidak ada user yang ditemukan.
+                            Tidak ada user yang ditemukan dengan filter tersebut.
                         </td>
                     </tr>
                     @endforelse

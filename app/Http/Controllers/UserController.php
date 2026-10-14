@@ -12,47 +12,37 @@ class UserController extends Controller
 
 {
 
-
-
-    public function index(Request $request)
+        public function index(Request $request)
     {
-        $query = User::query();
+        $user = auth()->user();
 
-        // Filter berdasarkan role
-        if ($request->filled('role')) {
-            $query->where('peran', $request->role);
+        // 🛡️ PENGAMAN: Hanya admin yang boleh akses manajemen user
+        if (!$user->isAdmin()) {
+            abort(403, 'Akses Ditolak.');
         }
 
-        // Filter berdasarkan kelas (untuk siswa)
-        if ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
-        }
+        // Ambil parameter search jika ada
+        $search = $request->get('search');
 
-        // Search berdasarkan nama atau email
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
+        // ⚠️ PERBAIKAN: Hanya ambil peran selain 'siswa' agar tidak menumpuk
+        $allowedRoles = ['admin', 'guru', 'wali_kelas', 'tamu'];
+        
+        $query = User::whereIn('peran', $allowedRoles);
+
+        // Fitur pencarian (opsional, jika ada di view Anda)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
             });
         }
 
-        $users = $query->with('kelas')
-            ->orderBy('peran')
-            ->orderBy('nama')
-            ->paginate(15);
+        // Urutkan berdasarkan nama
+        $users = $query->orderBy('nama')->paginate(15);
 
-        $daftarKelas = Kelas::orderBy('nama')->get();
-        $daftarRole = [
-            'admin' => '️ Admin',
-            'guru' => '‍🏫 Guru',
-            'wali_kelas' => '💼 Wali Kelas',
-            'siswa' => '👨‍ Siswa',
-        ];
-
-        return view('users.index', compact('users', 'daftarKelas', 'daftarRole'));
+        return view('users.index', compact('users', 'search'));
     }
-
         public function create()
     {
         $kelas = \App\Models\Kelas::orderBy('nama')->get();
@@ -68,8 +58,9 @@ class UserController extends Controller
         return view('users.create', compact('kelas', 'daftarRole'));
     }
 
-        public function store(Request $request)
-    {
+ public function store(Request $request)
+   
+ {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'peran' => 'required|in:admin,guru,wali_kelas,siswa,tamu',
