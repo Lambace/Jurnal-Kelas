@@ -7,40 +7,40 @@
 <div class="space-y-4 md:space-y-6">
     
     {{-- Helper untuk Generate Sort Link --}}
-            @php
-            // 🛡️ Default agar tidak pernah "undefined variable"
-            $sort = $sort ?? 'nama';
-            $direction = $direction ?? 'asc';
+    @php
+        // 🛡️ Default agar tidak pernah "undefined variable"
+        $sort = $sort ?? 'nama';
+        $direction = $direction ?? 'asc';
 
-            // 🛡️ Anti redeclare: hanya definisikan fungsi jika belum ada
-            if (!function_exists('sortLink')) {
-                function sortLink($column, $label, $currentSort, $currentDirection)
-                {
-                    $nextDirection = ($currentSort === $column && $currentDirection === 'asc') ? 'desc' : 'asc';
+        // 🛡️ Anti redeclare: hanya definisikan fungsi jika belum ada
+        if (!function_exists('sortLink')) {
+            function sortLink($column, $label, $currentSort, $currentDirection)
+            {
+                $nextDirection = ($currentSort === $column && $currentDirection === 'asc') ? 'desc' : 'asc';
 
-                    $params = array_merge(request()->query(), [
-                        'sort' => $column,
-                        'direction' => $nextDirection,
-                        'page' => null,
-                    ]);
+                $params = array_merge(request()->query(), [
+                    'sort' => $column,
+                    'direction' => $nextDirection,
+                    'page' => null,
+                ]);
 
-                    $url = request()->url() . '?' . http_build_query(array_filter($params));
+                $url = request()->url() . '?' . http_build_query(array_filter($params));
 
-                    if ($currentSort === $column) {
-                        $icon = $currentDirection === 'asc'
-                            ? '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/></svg>'
-                            : '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/></svg>';
-                    } else {
-                        $icon = '<svg class="w-3 h-3 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/></svg>';
-                    }
-
-                    $textColor = $currentSort === $column ? 'text-cyan-700' : 'text-gray-500 hover:text-cyan-600';
-
-                    return '<a href="' . $url . '" class="inline-flex items-center ' . $textColor . ' transition font-medium uppercase">'
-                        . $label . $icon . '</a>';
+                if ($currentSort === $column) {
+                    $icon = $currentDirection === 'asc'
+                        ? '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/></svg>'
+                        : '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/></svg>';
+                } else {
+                    $icon = '<svg class="w-3 h-3 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/></svg>';
                 }
+
+                $textColor = $currentSort === $column ? 'text-cyan-700' : 'text-gray-500 hover:text-cyan-600';
+
+                return '<a href="' . $url . '" class="inline-flex items-center ' . $textColor . ' transition font-medium uppercase">'
+                    . $label . $icon . '</a>';
             }
-        @endphp
+        }
+    @endphp
 
     {{-- Header & Tombol Aksi --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -99,13 +99,58 @@
         </div>
     @endif
 
-    {{-- MODAL IMPORT --}}
+    {{-- FORM FILTER TINGKAT & KELAS --}}
+    @if(isset($tingkatOptions) && isset($allKelasForFilter))
+    <form method="GET" action="{{ route('siswa.index') }}" class="flex flex-wrap gap-3 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+        {{-- Filter Tingkat --}}
+        <div class="flex-1 min-w-[150px]">
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Tingkat</label>
+            <select name="filter_tingkat" class="w-full rounded-lg border-gray-300 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition shadow-sm bg-white">
+                <option value="">Semua Tingkat</option>
+                @foreach($tingkatOptions as $tingkat)
+                    <option value="{{ $tingkat }}" {{ ($filterTingkat ?? '') == $tingkat ? 'selected' : '' }}>
+                        Tingkat {{ $tingkat }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Filter Kelas --}}
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Kelas</label>
+            <select name="filter_kelas" class="w-full rounded-lg border-gray-300 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition shadow-sm bg-white">
+                <option value="">Semua Kelas</option>
+                @foreach($allKelasForFilter as $k)
+                    <option value="{{ $k->id }}" {{ ($filterKelasId ?? '') == $k->id ? 'selected' : '' }}>
+                        {{ $k->nama }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Tombol Aksi Filter --}}
+        <div class="flex gap-2 pb-0.5">
+            <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-md flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                Filter
+            </button>
+            <a href="{{ route('siswa.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Reset
+            </a>
+        </div>
+    </form>
+    @endif
+
+    {{-- MODAL IMPORT (Diperbarui dengan Loading Overlay) --}}
     <div id="importModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="document.getElementById('importModal').classList.add('hidden')"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data">
+                
+                {{-- TAMBAHAN: onsubmit="showImportLoading()" --}}
+                <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data" onsubmit="showImportLoading()">
                     @csrf
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
@@ -121,14 +166,17 @@
                                         Upload file Excel (.xlsx, .xls) atau CSV. <br>
                                         <a href="{{ route('siswa.export') }}" class="text-indigo-600 hover:underline font-medium">Download Template Format</a> terlebih dahulu untuk memastikan kolom sesuai.
                                     </p>
-                                    <input type="file" name="file_import" accept=".xlsx,.xls,.csv" required
+                                    <input type="file" name="file_import" id="fileInput" accept=".xlsx,.xls,.csv" required
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
+                                    
+                                    {{-- Preview nama file --}}
+                                    <p id="fileName" class="text-xs text-gray-400 mt-2 hidden"></p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:w-auto sm:text-sm">
+                        <button type="submit" id="submitImportBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:w-auto sm:text-sm transition-all">
                             Upload & Import
                         </button>
                         <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm">
@@ -139,6 +187,58 @@
             </div>
         </div>
     </div>
+
+    {{-- 🌟 OVERLAY LOADING BARU (Diletakkan di luar modal, z-index lebih tinggi) --}}
+    <div id="importLoadingOverlay" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-sm mx-4">
+            <!-- Spinner Animasi -->
+            <svg class="animate-spin h-12 w-12 text-cyan-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            
+            <!-- Pesan -->
+            <div class="text-center">
+                <h4 class="font-bold text-gray-800 text-lg">Sedang Memproses Data...</h4>
+                <p class="text-sm text-gray-500 mt-1">Mohon jangan tutup halaman ini atau klik tombol lagi.<br>Proses ini mungkin memakan waktu beberapa detik.</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Script JavaScript untuk menangani Loading --}}
+    <script>
+        function showImportLoading() {
+            // 1. Tampilkan overlay loading
+            const overlay = document.getElementById('importLoadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+
+            // 2. Ubah tombol submit agar tidak bisa diklik 2x
+            const btn = document.getElementById('submitImportBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                `;
+            }
+        }
+
+        // Bonus: Tampilkan nama file yang dipilih agar user yakin
+        document.getElementById('fileInput')?.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            const fileNameDisplay = document.getElementById('fileName');
+            if (fileName && fileNameDisplay) {
+                fileNameDisplay.textContent = 'File terpilih: ' + fileName;
+                fileNameDisplay.classList.remove('hidden');
+            }
+        });
+    </script>
 
     {{-- Tabel Data Siswa dengan Sort --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
