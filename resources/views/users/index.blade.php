@@ -27,14 +27,7 @@
         <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <div>
-            <h4 class="font-semibold text-blue-800 text-sm">Pemisahan Data Agar Tetap Ringan</h4>
-            <p class="text-sm text-blue-700 mt-1">
-                Halaman ini khusus untuk mengelola akun <b>Administrator, Guru, dan Wali Kelas</b>. 
-                Untuk mengelola data <b>Siswa</b> (termasuk import massal), silakan gunakan menu 
-                <a href="{{ route('siswa.index') }}" class="underline font-bold hover:text-blue-900">Data Siswa</a>.
-            </p>
-        </div>
+        
     </div>
 
     {{-- Header dengan Jarak yang Jelas --}}
