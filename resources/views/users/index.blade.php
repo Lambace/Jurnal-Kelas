@@ -4,6 +4,22 @@
 @section('header', 'Manajemen User')
 
 @section('content')
+
+    {{-- ️ SAFETY CHECK: Pastikan variabel ada (fallback jika controller gagal kirim) --}}
+    @php
+        $daftarRole = $daftarRole ?? [
+            'admin' => 'Administrator',
+            'guru' => 'Guru',
+            'wali_kelas' => 'Wali Kelas',
+            'tamu' => 'Tamu'
+        ];
+        
+        $daftarKelas = $daftarKelas ?? collect([]);
+        $search = $search ?? '';
+        $role = $role ?? '';
+        $kelasId = $kelasId ?? '';
+    @endphp
+
 <div class="space-y-4 md:space-y-6">
 
     {{-- 🌟 INFO BOX: Penjelasan Pemisahan Data --}}

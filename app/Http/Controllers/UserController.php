@@ -6,13 +6,10 @@ use App\Models\User;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
-
 {
-
-        public function index(Request $request)
+    public function index(Request $request)
     {
         $user = auth()->user();
 
@@ -21,15 +18,27 @@ class UserController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        // Ambil parameter search jika ada
+        // Ambil parameter filter jika ada
         $search = $request->get('search');
+        $role = $request->get('role');
+        $kelasId = $request->get('kelas_id');
 
         // ⚠️ PERBAIKAN: Hanya ambil peran selain 'siswa' agar tidak menumpuk
         $allowedRoles = ['admin', 'guru', 'wali_kelas', 'tamu'];
         
-        $query = User::whereIn('peran', $allowedRoles);
+        $query = User::whereIn('peran', $allowedRoles)->with('kelas');
 
-        // Fitur pencarian (opsional, jika ada di view Anda)
+        // Fitur filter peran
+        if ($role) {
+            $query->where('peran', $role);
+        }
+
+        // Fitur filter kelas
+        if ($kelasId) {
+            $query->where('kelas_id', $kelasId);
+        }
+
+        // Fitur pencarian nama/email/nip
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
@@ -41,11 +50,30 @@ class UserController extends Controller
         // Urutkan berdasarkan nama
         $users = $query->orderBy('nama')->paginate(15);
 
-        return view('users.index', compact('users', 'search'));
+        // ⚠️ PERBAIKAN UTAMA: Siapkan data untuk dropdown filter di view
+        $daftarRole = [
+            'admin' => 'Administrator',
+            'guru' => 'Guru',
+            'wali_kelas' => 'Wali Kelas',
+            'tamu' => 'Tamu'
+        ];
+        
+        $daftarKelas = Kelas::orderBy('nama')->get();
+
+        // ⚠️ PASTIKAN semua variabel ini dikirim ke view
+        return view('users.index', compact(
+            'users', 
+            'daftarRole',   // <-- Diperbaiki (sebelumnya hilang)
+            'daftarKelas',  // <-- Diperbaiki (sebelumnya hilang)
+            'search', 
+            'role',         // <-- Diperbaiki (agar dropdown tetap 'selected')
+            'kelasId'       // <-- Diperbaiki (agar dropdown tetap 'selected')
+        ));
     }
-        public function create()
+
+    public function create()
     {
-        $kelas = \App\Models\Kelas::orderBy('nama')->get();
+        $kelas = Kelas::orderBy('nama')->get();
         
         $daftarRole = [
             'admin' => '⚙️ Admin',
@@ -58,9 +86,8 @@ class UserController extends Controller
         return view('users.create', compact('kelas', 'daftarRole'));
     }
 
- public function store(Request $request)
-   
- {
+    public function store(Request $request)
+    {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'peran' => 'required|in:admin,guru,wali_kelas,siswa,tamu',
@@ -94,9 +121,10 @@ class UserController extends Controller
         
         $daftarRole = [
             'admin' => '⚙️ Admin',
-            'guru' => '‍🏫 Guru',
-            'wali_kelas' => '👨💼 Wali Kelas',
-            'siswa' => '‍ Siswa',
+            'guru' => '👨‍🏫 Guru',
+            'wali_kelas' => '👨‍💼 Wali Kelas',
+            'siswa' => '👨‍🎓 Siswa',
+            'tamu' => '👤 Tamu',
         ];
 
         return view('users.edit', compact('user', 'kelas', 'daftarRole'));
@@ -107,7 +135,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'peran' => 'required|in:admin,guru,wali_kelas,siswa',
+            'peran' => 'required|in:admin,guru,wali_kelas,siswa,tamu',
             'kelas_id' => 'nullable|exists:kelas,id',
             'nip' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:20',
