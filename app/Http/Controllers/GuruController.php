@@ -52,32 +52,33 @@ class GuruController extends Controller
             return redirect()->route('guru.index')->with('error', 'Gagal mengimport data. Pastikan format file sesuai.');
         }
     }
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'nama' => 'required|string|max:255',
+        // 'peran' => 'required|in:guru,wali_kelas',  // ← HAPUS atau KOMENTARI baris ini
+        'nip' => 'nullable|string|max:50',
+        'no_hp' => 'nullable|string|max:20',
+    ]);
 
-        public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nama'  => 'required|string|max:255',
-            'peran' => 'required|in:guru,wali_kelas',
-            'nip'   => 'nullable|string|max:50',
-            'no_hp' => 'nullable|string|max:20',
-            // ✨ email & password TIDAK lagi divalidasi dari form
-        ]);
+    // ✨ OTOMATIS set peran = 'guru' untuk halaman ini
+    $validated['peran'] = 'guru';
 
-        // ✨ Email otomatis sesuai peran: guru/wali_kelas -> @guru.id
-        $email = User::generateEmail($validated['nama'], $validated['peran']);
+    // Generate email otomatis
+    $email = User::generateEmail($validated['nama'], 'guru');
 
-        User::create([
-            'nama'     => $validated['nama'],
-            'email'    => $email,
-            'password' => Hash::make(User::defaultPassword()), // default: "password"
-            'peran'    => $validated['peran'],
-            'nip'      => $validated['nip'] ?? null,
-            'no_hp'    => $validated['no_hp'] ?? null,
-        ]);
+    User::create([
+        'nama' => $validated['nama'],
+        'email' => $email,
+        'password' => Hash::make(User::defaultPassword()),
+        'peran' => $validated['peran'], // akan selalu 'guru'
+        'nip' => $validated['nip'] ?? null,
+        'no_hp' => $validated['no_hp'] ?? null,
+    ]);
 
-        return redirect()->route('guru.index')
-            ->with('success', "Guru berhasil ditambahkan! Email: {$email} | Password: " . User::defaultPassword());
-    }
+    return redirect()->route('guru.index')
+        ->with('success', "Guru berhasil ditambahkan! Email: {$email} | Password: " . User::defaultPassword());
+}
 
      public function edit(User $guru) 
     {
