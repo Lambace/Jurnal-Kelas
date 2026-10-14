@@ -14,35 +14,36 @@ use App\Imports\SiswaImport;
 
 class SiswaController extends Controller
 {
-       public function index(Request $request)
+          public function index(Request $request)
     {
         $user = auth()->user();
+
+        // 🛡️ Pengaman: jika session ghost (jarang terjadi)
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Silakan login kembali.');
+        }
+
         $kelasIds = $user->kelasIdsDiampu();
 
         // ⚠️ WHITELIST kolom yang boleh di-sort (mencegah SQL injection)
         $allowedSorts = ['nama', 'nama_kelas', 'nama_ortu', 'no_wa_ortu', 'created_at'];
         
-        // Ambil parameter sort dari URL (?sort=nama&direction=asc)
         $sort = in_array($request->get('sort'), $allowedSorts) 
             ? $request->get('sort') 
-            : 'nama'; // default: urutkan berdasarkan nama
+            : 'nama';
         
         $direction = in_array($request->get('direction'), ['asc', 'desc']) 
             ? $request->get('direction') 
             : 'asc';
 
         // Query data siswa
-        $query = User::where('peran', 'siswa')
-            ->with('kelas');
+        $query = User::where('peran', 'siswa')->with('kelas');
 
-        // Filter berdasarkan kelas (admin = semua, wali kelas = kelasnya saja)
         if (!$user->isAdmin()) {
             $query->whereIn('kelas_id', $kelasIds);
         }
 
-        // Terapkan sorting
         if ($sort === 'nama_kelas') {
-            // Sort berdasarkan nama kelas butuh join
             $query->join('kelas', 'users.kelas_id', '=', 'kelas.id')
                   ->orderBy('kelas.nama', $direction)
                   ->select('users.*');
@@ -50,9 +51,7 @@ class SiswaController extends Controller
             $query->orderBy($sort, $direction);
         }
 
-        // Gunakan paginate (sesuai view yang ada $siswa->hasPages())
         $siswa = $query->paginate(10)->appends($request->query());
-        
         $kelasList = $user->isAdmin() ? Kelas::all() : $user->kelasWali()->get();
 
         return view('siswa.index', compact('siswa', 'kelasList', 'sort', 'direction'));

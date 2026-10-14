@@ -7,36 +7,40 @@
 <div class="space-y-4 md:space-y-6">
     
     {{-- Helper untuk Generate Sort Link --}}
-    @php
-        function sortLink($column, $label, $currentSort, $currentDirection)
-        {
-            // Tentukan arah sort berikutnya
-            $nextDirection = ($currentSort === $column && $currentDirection === 'asc') ? 'desc' : 'asc';
-            
-            // Gabungkan query params yang ada (pagination, filter, dll)
-            $params = array_merge(request()->query(), [
-                'sort' => $column,
-                'direction' => $nextDirection,
-                'page' => null, // reset ke halaman 1 saat ganti sort
-            ]);
-            
-            $url = request()->url() . '?' . http_build_query(array_filter($params));
-            
-            // Tentukan ikon panah dengan styling yang sesuai tema
-            if ($currentSort === $column) {
-                $icon = $currentDirection === 'asc' 
-                    ? '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/></svg>'
-                    : '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/></svg>';
-            } else {
-                $icon = '<svg class="w-3 h-3 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/></svg>';
+            @php
+            // 🛡️ Default agar tidak pernah "undefined variable"
+            $sort = $sort ?? 'nama';
+            $direction = $direction ?? 'asc';
+
+            // 🛡️ Anti redeclare: hanya definisikan fungsi jika belum ada
+            if (!function_exists('sortLink')) {
+                function sortLink($column, $label, $currentSort, $currentDirection)
+                {
+                    $nextDirection = ($currentSort === $column && $currentDirection === 'asc') ? 'desc' : 'asc';
+
+                    $params = array_merge(request()->query(), [
+                        'sort' => $column,
+                        'direction' => $nextDirection,
+                        'page' => null,
+                    ]);
+
+                    $url = request()->url() . '?' . http_build_query(array_filter($params));
+
+                    if ($currentSort === $column) {
+                        $icon = $currentDirection === 'asc'
+                            ? '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/></svg>'
+                            : '<svg class="w-3 h-3 ml-1 text-cyan-600" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/></svg>';
+                    } else {
+                        $icon = '<svg class="w-3 h-3 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/></svg>';
+                    }
+
+                    $textColor = $currentSort === $column ? 'text-cyan-700' : 'text-gray-500 hover:text-cyan-600';
+
+                    return '<a href="' . $url . '" class="inline-flex items-center ' . $textColor . ' transition font-medium uppercase">'
+                        . $label . $icon . '</a>';
+                }
             }
-            
-            $textColor = $currentSort === $column ? 'text-cyan-700' : 'text-gray-500 hover:text-cyan-600';
-            
-            return '<a href="' . $url . '" class="inline-flex items-center ' . $textColor . ' transition font-medium uppercase">' 
-                   . $label . $icon . '</a>';
-        }
-    @endphp
+        @endphp
 
     {{-- Header & Tombol Aksi --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
